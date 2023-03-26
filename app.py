@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for, session
 from flask_session import Session
 
 app = Flask(__name__)
@@ -8,15 +8,18 @@ app.config['SESSION_PERMANENT'] = False
 app.config['SESSION_USE_SIGNER'] = True
 
 from collections import defaultdict
+
 loan_amounts = defaultdict(int)
 pending_loans = []
 max_loan_amount = 1000
 current_balance = 1000
 users = []
 
+
 @app.route('/', methods=['GET', 'POST'])
 def home():
     return redirect(url_for('login'))
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -29,6 +32,7 @@ def login():
         print(loan_amounts)
         return redirect(url_for('dashboard'))
     return render_template('login.html')
+
 
 @app.route('/dashboard', methods=['GET', 'POST'])
 def dashboard():
@@ -49,7 +53,8 @@ def dashboard():
 
     loan_balance = max_loan_amount - total_amount
     # loan_balance = current_balance
-    return render_template('dashboard.html', username=username, loan_amount=loan_amounts[username], max_loan_amount=max_loan_amount, pending_loans=pending_loans, loan_balance=loan_balance)
+    return render_template('dashboard.html', username=username, loan_amount=loan_amounts[username],
+                           max_loan_amount=max_loan_amount, pending_loans=pending_loans, loan_balance=loan_balance)
 
 
 @app.route('/request_loan', methods=['POST'])
@@ -74,16 +79,12 @@ def request_loan():
     loan_id = len(pending_loans) + 1
 
     print(loan_id)
-    pending_loans.append({
-        'id': loan_id,
-        'username': username,
-        'amount': loan_amount,
-        'approvals': set(),
-        'rejects': set(),
-    })
+    pending_loans.append(
+        {'id': loan_id, 'username': username, 'amount': loan_amount, 'approvals': set(), 'rejects': set(), })
 
     print('Loan request submitted successfully.')
     return redirect(url_for('dashboard'))
+
 
 @app.route('/approve_loan/<int:loan_id>', methods=['GET', 'POST'])
 def approve_loan(loan_id):
@@ -98,14 +99,15 @@ def approve_loan(loan_id):
 
     if request.method == 'POST':
         vote = request.form['vote']
-        total_users = len(users)/2
+        total_users = len(users) / 2
         print(vote)
 
         for loan in pending_loans:
             if loan['id'] == loan_id:
                 if username in loan['approvals']:
                     print("ap 123")
-                    return render_template('vote.html', error_message='You have already voted', already_voted="true", loan={"amount": loan["amount"], "borrower": loan["username"]})
+                    return render_template('vote.html', error_message='You have already voted', already_voted="true",
+                                           loan={"amount": loan["amount"], "borrower": loan["username"]})
 
         if vote == 'approve':
             # pending_loans[loan_id]['approvals'][username] = True
@@ -142,8 +144,7 @@ def approve_loan(loan_id):
             for loan in pending_loans:
                 if loan['id'] == loan_id:
                     pending_loans.remove(loan)
-                    print(pending_loans)
-            # del pending_loans[loan_id]
+                    print(pending_loans)  # del pending_loans[loan_id]
         print("12")
         print(pending_loans)
         return redirect(url_for('dashboard'))
@@ -153,6 +154,7 @@ def approve_loan(loan_id):
 
     print(pending_loans)
     return render_template('vote.html', loan=pending_loans[loan_id])
+
 
 if __name__ == '__main__':
     sess = Session()
